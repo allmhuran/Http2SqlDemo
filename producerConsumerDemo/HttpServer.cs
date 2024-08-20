@@ -6,11 +6,11 @@ namespace ProducerConsumerDemo
 {
    internal class HttpServer
    {
-      public readonly int MaxObjectCount;
+      public readonly int ObjectCount;
 
-      public HttpServer(int maxObjectCount = 100)
+      public HttpServer(int objectCount = 100)
       {
-         MaxObjectCount = maxObjectCount;
+         ObjectCount = objectCount;
          var builder = WebApplication.CreateBuilder();  
          builder.Logging.ClearProviders();
          var app = builder.Build();
@@ -23,10 +23,9 @@ namespace ProducerConsumerDemo
       private async Task<string> GetAsync(int skip, int count) 
       {
          await Task.Delay(10);
-         return JsonSerializer.Serialize
-         (
-            Enumerable.Range(skip + 1, count).Select(v => new Dto { i = v, s = v.ToString(), dt = DateTime.Now.AddDays(v) })
-         );
+         return skip + count > ObjectCount 
+            ? JsonSerializer.Serialize(Enumerable.Empty<Dto>())
+            : Enumerable.Range(skip + 1, count).Select(v => new Dto { i = v, s = v.ToString(), dt = DateTime.Now.AddDays(v) });
       }
 
       private Task<string> GetAsync() => GetAsync(0, MaxObjectCount);
