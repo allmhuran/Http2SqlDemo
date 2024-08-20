@@ -13,7 +13,7 @@ namespace ProducerConsumerDemo
          
          await consumer.ClearAsync();
 
-         var sw = new Stopwatch();
+         var sw = new Stopwatch(); 
          sw.Start();
          var results = await producer.ReadAsync(@"http://localhost:8080");
          foreach (var r in results) { await consumer.WriteOneAsync(r); }            
