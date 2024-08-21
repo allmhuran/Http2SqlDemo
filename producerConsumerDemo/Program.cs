@@ -1,38 +1,79 @@
-﻿
-using System.Diagnostics;
-
-namespace ProducerConsumerDemo
+﻿namespace Coates.Demos.ProducerConsumerApp
 {
    internal class Program
    {
-      static async Task Main(string[] args)
+      static void Main(string[] args)
       {
-         var server = new HttpServer();
-         var producer = new HttpProducer<Dto>();
-         var consumer = new SqlConsumer<Dto>("");
-         
-         await consumer.ClearAsync();
+         //Next(1);
 
-         var sw = new Stopwatch(); 
-         sw.Start();
-         var results = await producer.ReadAsync(@"http://localhost:8080");
-         foreach (var r in results) { await consumer.WriteOneAsync(r); }            
-         sw.Stop();
-         var rate = 1000f * (await consumer.CountAsync()) / sw.ElapsedMilliseconds;
-         Console.WriteLine($"One by one wrote at {rate:f4} rows/s");
-         
-         await consumer.ClearAsync();
+         //Test(Tests.SyncOne);
 
-         sw.Restart();
-         results = await producer.ReadAsync(@"http://localhost:8080");
-         await consumer.WriteManyAsync(results);
-         sw.Stop();
-         rate = 1000f * (await consumer.CountAsync()) / sw.ElapsedMilliseconds;
-         Console.WriteLine($"All at once wrote at {rate:f4} rows/s");
+         //Next(100);
 
+         //Test(Tests.SyncOne);
+         //Test(Tests.SyncMany);
 
+         //Next(1000);
 
-         
+         //Test(Tests.SyncOne);
+         //Test(Tests.SyncMany);
+         //Test(Tests.SyncBulk);
+         //Test(Tests.SyncTvp);
+         //Test(Tests.SyncTvpMerge);
+
+         //Next(10_000, 2000);
+
+         //Test(Tests.SyncBulk);
+         //Test(Tests.SyncTvp);
+         //Test(Tests.SyncTvpMerge);
+
+         //Next(10_000);
+
+         //Test(Tests.SyncBulk);
+         //Test(Tests.SyncTvp);
+         //Test(Tests.SyncTvpMerge);
+
+         //Next(100_000, 5000);
+
+         //Test(Tests.SyncBulk);
+         //Test(Tests.SyncTvp);
+         //Test(Tests.SyncTvpMerge);
+
+         //Next(100_000);
+
+         //Test(Tests.SyncBulk);
+         //Test(Tests.SyncTvp);
+         //Test(Tests.SyncTvpMerge);
+
+         Next(1_000_000, 5000);
+
+         Test(Tests.SyncBulk);
+         Test(Tests.SyncTvp);
+         Test(Tests.SyncTvpMerge);
+
+         Next();
+      }
+
+      static void Next(int? count = null, int? batchSize = null)
+      {
+         Tests.ObjectCount = count ?? Tests.ObjectCount;
+         Tests.BatchSize = batchSize;
+         Console.WriteLine();
+         Console.Write($"Ready for {Tests.ObjectCount} ({(batchSize?.ToString() ?? "no batching")})");
+         var pos = Console.GetCursorPosition();
+         Console.ReadKey();
+         Console.SetCursorPosition(pos.Left, pos.Top);
+         Console.WriteLine(" >");
+         Console.WriteLine();
+      }
+
+      static void Test(Func<Task<long>> test)
+      {
+         Tests.Cleanup().GetAwaiter().GetResult();
+         GC.Collect();
+         GC.WaitForPendingFinalizers();
+         var ms = test().GetAwaiter().GetResult();
+         Console.WriteLine($"{test.Method.Name,-20} wrote {Tests.ObjectCount,7} objects in {ms / 1000f,6:F2} s at {Tests.ObjectCount * 1000f / ms,9:F2} objects/s");
       }
    }
 }
