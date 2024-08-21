@@ -1,17 +1,17 @@
-﻿namespace Coates.Demos.ProducerConsumerApp
+﻿namespace Coates.Demos.ProducerConsumer
 {
    internal class Program
    {
       static void Main(string[] args)
       {
-         //Next(1);
+         Next(10);
 
-         //Test(Tests.SyncOne);
+         Test(Tests.SyncOne);
 
-         //Next(100);
+         Next(100);
 
-         //Test(Tests.SyncOne);
-         //Test(Tests.SyncMany);
+         Test(Tests.SyncOne);
+         Test(Tests.SyncMany);
 
          //Next(1000);
 
@@ -27,11 +27,11 @@
          //Test(Tests.SyncTvp);
          //Test(Tests.SyncTvpMerge);
 
-         //Next(10_000);
+         Next(10_000);
 
-         //Test(Tests.SyncBulk);
-         //Test(Tests.SyncTvp);
-         //Test(Tests.SyncTvpMerge);
+         Test(Tests.SyncBulk);
+         Test(Tests.SyncTvp);
+         Test(Tests.SyncTvpMerge);
 
          //Next(100_000, 5000);
 
@@ -45,11 +45,11 @@
          //Test(Tests.SyncTvp);
          //Test(Tests.SyncTvpMerge);
 
-         Next(1_000_000, 5000);
+         //Next(1_000_000, 5000);
 
-         Test(Tests.SyncBulk);
-         Test(Tests.SyncTvp);
-         Test(Tests.SyncTvpMerge);
+         //Test(Tests.SyncBulk);
+         //Test(Tests.SyncTvp);
+         //Test(Tests.SyncTvpMerge);
 
          Next();
       }
