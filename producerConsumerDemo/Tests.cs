@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Threading.Channels;
 
 namespace Coates.Demos.ProducerConsumer
 {
@@ -16,6 +17,50 @@ namespace Coates.Demos.ProducerConsumer
 
       public static long GetObjectCount() => p.GetCount().Result;
 
+      public static async Task<long> PipeAsync(Func<IEnumerable<Dto, Task> write)
+      {
+         var opts = new BoundedChannelOptions(2000) { SingleReader = true, SingleWriter = true };
+         var channel = Channel.CreateBounded<Dto>(opts);
+
+         await p.SetCount(TotalCount);
+         await c.ClearAsync();
+         p.BatchSize = ReadBatchSize ?? TotalCount;
+         c.BatchSize = WriteBatchSize ?? TotalCount;
+         int skip = 0;
+         sw.Restart();
+
+         var t1 = Task.Run
+         (
+            async () =>
+            {
+               while (true)
+               {
+                  var results = (await p.ReadAsync(skip));
+                  if (!results.Any())
+                  {
+                     channel.Writer.Complete();
+                     break;
+                  }
+                  else
+                  {
+                     foreach (var item in results) { await channel.Writer.WriteAsync(item); }
+                     skip += p.BatchSize;
+                  }
+               }
+            }
+         );
+
+         var t2 = Task.Run
+         (
+            async () =>
+            {
+               await foreach (var item in channel.Reader.ReadAllAsync())
+               {
+               }
+            }
+         );
+      }
+
       public static int TotalCount = 1;
       public static int? ReadBatchSize = 1;
       public static int? WriteBatchSize = 1;
@@ -26,11 +71,11 @@ namespace Coates.Demos.ProducerConsumer
          await c.ClearAsync();
          p.BatchSize = ReadBatchSize ?? TotalCount;
          c.BatchSize = WriteBatchSize ?? TotalCount;
-         sw.Restart();
          int skip = 0;
+         sw.Restart();
          while (true)
          {
-            var results = (await p.ReadAsync(skip)).ToArray();
+            var results = (await p.ReadAsync(skip));
             if (!results.Any()) break;
             else await write(results);
             skip += p.BatchSize;
