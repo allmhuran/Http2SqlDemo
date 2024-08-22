@@ -4,7 +4,13 @@
    {
       static void Main(string[] args)
       {
-         Next(10);
+         Console.SetWindowSize(90, 35);
+
+         Next(1);
+
+         Test(Tests.SyncOne);
+
+         Next(1);
 
          Test(Tests.SyncOne);
 
@@ -13,37 +19,31 @@
          Test(Tests.SyncOne);
          Test(Tests.SyncMany);
 
-         //Next(1000);
+         Next(1000);
 
-         //Test(Tests.SyncOne);
-         //Test(Tests.SyncMany);
-         //Test(Tests.SyncBulk);
-         //Test(Tests.SyncTvp);
-         //Test(Tests.SyncTvpMerge);
+         Test(Tests.SyncOne);
+         Test(Tests.SyncMany);
+         Test(Tests.SyncBulk);
+         Test(Tests.SyncTvp);
+         Test(Tests.SyncTvpMerge);
 
-         //Next(10_000, 2000);
-
-         //Test(Tests.SyncBulk);
-         //Test(Tests.SyncTvp);
-         //Test(Tests.SyncTvpMerge);
-
-         Next(10_000);
+         Next(100_000);
 
          Test(Tests.SyncBulk);
          Test(Tests.SyncTvp);
          Test(Tests.SyncTvpMerge);
 
-         //Next(100_000, 5000);
+         Next(100_000, 1000, 1000);
 
-         //Test(Tests.SyncBulk);
-         //Test(Tests.SyncTvp);
-         //Test(Tests.SyncTvpMerge);
+         Test(Tests.SyncBulk);
+         Test(Tests.SyncTvp);
+         Test(Tests.SyncTvpMerge);
 
-         //Next(100_000);
+         Next(100_000, 10000, 10000);
 
-         //Test(Tests.SyncBulk);
-         //Test(Tests.SyncTvp);
-         //Test(Tests.SyncTvpMerge);
+         Test(Tests.SyncBulk);
+         Test(Tests.SyncTvp);
+         Test(Tests.SyncTvpMerge);
 
          //Next(1_000_000, 5000);
 
@@ -51,15 +51,17 @@
          //Test(Tests.SyncTvp);
          //Test(Tests.SyncTvpMerge);
 
-         Next();
+         Console.WriteLine("\nDone");
+         Console.ReadKey();
       }
 
-      static void Next(int? count = null, int? batchSize = null)
+      static void Next(int? count = null, int? readBatchSize = null, int? writeBatchSize = null)
       {
-         Tests.ObjectCount = count ?? Tests.ObjectCount;
-         Tests.BatchSize = batchSize;
+         Tests.TotalCount = count ?? Tests.TotalCount;
+         Tests.ReadBatchSize = readBatchSize;
+         Tests.WriteBatchSize = writeBatchSize;
          Console.WriteLine();
-         Console.Write($"Ready for {Tests.ObjectCount} ({(batchSize?.ToString() ?? "no batching")})");
+         Console.Write($"Process {count:n0} (read batch: {readBatchSize?.ToString() ?? "none"}, write batch: {writeBatchSize?.ToString() ?? "none"})");
          var pos = Console.GetCursorPosition();
          Console.ReadKey();
          Console.SetCursorPosition(pos.Left, pos.Top);
@@ -67,13 +69,16 @@
          Console.WriteLine();
       }
 
-      static void Test(Func<Task<long>> test)
+      static void Test(Func<long> test)
       {
-         Tests.Cleanup().GetAwaiter().GetResult();
          GC.Collect();
          GC.WaitForPendingFinalizers();
-         var ms = test().GetAwaiter().GetResult();
-         Console.WriteLine($"{test.Method.Name,-20} wrote {Tests.ObjectCount,7} objects in {ms / 1000f,6:F2} s at {Tests.ObjectCount * 1000f / ms,9:F2} objects/s");
+         GC.Collect();
+         var before = GC.GetTotalAllocatedBytes();
+         var ms = test();
+         var akb = (GC.GetTotalAllocatedBytes() - before) / 1000f;
+         var tkb = GC.GetTotalMemory(false) / 1000f;
+         Console.WriteLine($"{test.Method.Name,-16} {ms / 1000f,9:n1}s at {Tests.TotalCount * 1000f / ms,9:n0}/s (alloc {akb,7:n0}KB total {tkb,7:n0}KB)");
       }
    }
 }

@@ -4,6 +4,5 @@ namespace Coates.Demos.ProducerConsumer
 {
    internal class Pipeline<T>(HttpProducer<T> p, SqlConsumer<T> c) where T : class
    {
-      public async Task Run(
    }
 }

@@ -17,16 +17,16 @@ namespace Coates.Demos.ProducerConsumer
       public async Task WriteOneAsync(IEnumerable<T> items)
       {
          using var con = new SqlConnection(connectionSring);
-         foreach (var item in items)
+         foreach (var batch in items.Chunk(BatchSize))
          {
-            await con.InsertAsync(item);
+            foreach (var item in batch) await con.InsertAsync(item);
          }
       }
 
       public async Task WriteManyAsync(IEnumerable<T> items)
       {
          using var con = new SqlConnection(connectionSring);
-         await con.InsertAsync(items);
+         foreach (var batch in items.Chunk(BatchSize)) await con.InsertAsync(batch);
       }
 
       public async Task WriteBulkAsync(IEnumerable<T> items)
@@ -34,16 +34,21 @@ namespace Coates.Demos.ProducerConsumer
          using var con = new SqlConnection(connectionSring);
          await con.OpenAsync();
          using var bcp = new SqlBulkCopy(con);
-         var reader = ObjectReader.Create(items);
-         bcp.DestinationTableName = tableName;
-         await bcp.WriteToServerAsync(reader);
+         foreach (var batch in items.Chunk(BatchSize))
+         {
+            var reader = ObjectReader.Create(batch);
+            bcp.DestinationTableName = tableName;
+            await bcp.WriteToServerAsync(reader);
+         }
       }
 
       public async Task InsertTvpAsync(IEnumerable<T> items) => await WriteTvpAsync(items, "pcd.InsertData");
 
       public async Task MergeTvpAsync(IEnumerable<T> items) => await WriteTvpAsync(items, "pcd.MergeData");
 
-      private static IEnumerable<SqlDataRecord> map(IEnumerable<T> items)
+      public int BatchSize = 1;
+
+      private IEnumerable<SqlDataRecord> map(IEnumerable<T> items)
       {
          foreach (var item in items)
          {
@@ -61,19 +66,22 @@ namespace Coates.Demos.ProducerConsumer
          using var cmd = con.CreateCommand();
          cmd.CommandType = CommandType.StoredProcedure;
          cmd.CommandText = dbProcName;
-         cmd.Parameters.Add
-         (
-            new SqlParameter
-            {
-               SqlDbType = SqlDbType.Structured,
-               ParameterName = "@data",
-               TypeName = "pcd.data",
-               Direction = ParameterDirection.Input,
-               Value = map(items)
-            }
-         );
+         var tvp = new SqlParameter
+         {
+            SqlDbType = SqlDbType.Structured,
+            ParameterName = "@data",
+            TypeName = "pcd.data",
+            Direction = ParameterDirection.Input
+         };
+         cmd.Parameters.Add(tvp);
+
          await con.OpenAsync();
-         await cmd.ExecuteNonQueryAsync();
+
+         foreach (var batch in items.Chunk(BatchSize))
+         {
+            tvp.Value = map(batch);
+            await cmd.ExecuteNonQueryAsync();
+         }
       }
 
       private static SqlDataRecord r = new SqlDataRecord

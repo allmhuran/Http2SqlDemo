@@ -1,37 +1,58 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace Coates.Demos.ProducerConsumer
 {
-   public class HttpServer
+   static class HttpServer
    {
-      public HttpServer(int objectCount = 100)
+      static HttpServer()
       {
-         ObjectCount = objectCount;
          var builder = WebApplication.CreateBuilder();
          builder.Logging.ClearProviders();
          _app = builder.Build();
-
          _app.MapGet("/get/{skip?}/{count?}", (int? skip, int? count) => Get(skip, count));
-         _appTask = _app.RunAsync(@"http://localhost:8080");
+         _app.MapGet("/count", () => TypedResults.Ok(_objectCount));
+         _app.MapPost("/count/{count}", (int count) => _objectCount = count);
       }
 
-      public int ObjectCount { get; set; }
+      public static void Run() => _app.Run(@"http://localhost:8080");
 
-      private string Get(int? skip, int? count)
+      private static string Get(int? skip, int? count)
       {
-         Task.Delay(20).GetAwaiter().GetResult();
+         Task.Delay(10).Wait();
+         Console.WriteLine($"get skip = {skip,-7} count = {count,-7}");
+         Task.Delay(10).GetAwaiter().GetResult();
+         int rangeSkip = skip ?? 0;
+         var rangeCount = Math.Min(count ?? _objectCount, _objectCount - rangeSkip);
+
          return JsonSerializer.Serialize
          (
-            skip + count > ObjectCount
+            rangeSkip >= _objectCount
             ? Enumerable.Empty<Dto>()
-            : Enumerable.Range(skip ?? 0 + 1, count ?? ObjectCount).Select(v => new Dto { i = v, s = v.ToString(), dt = DateTime.Now.AddDays(v) })
+            : Enumerable.Range(rangeSkip + 1, rangeCount).Select
+            (
+               v => new Dto
+               {
+                  i = v,
+                  s = new string('s', Random.Shared.Next(4, 16)),
+                  dt = DateTime.Now.AddDays(v % 100)
+               }
+            )
          );
       }
 
-      private WebApplication _app;
-      private Task _appTask;
-      private bool disposedValue;
+      private static int _objectCount = 1;
+      private static WebApplication _app;
+   }
+
+   internal class Server
+   {
+      static void Main(string[] args)
+      {
+         Console.SetWindowSize(40, 30);
+         HttpServer.Run();
+      }
    }
 }
