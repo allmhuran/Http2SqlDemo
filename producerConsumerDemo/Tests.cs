@@ -15,11 +15,13 @@ namespace Coates.Demos.ProducerConsumer
 
       public static long SyncTvpMerge() => ReadWriteAsync(c.MergeTvpAsync).Result;
 
-      public static long StreamBulk() => StreamAsync(c.WriteBulkAsync).Result;
+      public static long PipeBulk() => PipeAsync(c.WriteBulkAsync).Result;
 
-      public static long StreamTvp() => StreamAsync(c.InsertTvpAsync).Result;
+      public static long PipeTvp() => PipeAsync(c.InsertTvpAsync).Result;
 
-      public static long StreamTvpMerge() => StreamAsync(c.MergeTvpAsync).Result;
+      public static long PipeTvpMerge() => PipeAsync(c.MergeTvpAsync).Result;
+
+      public static long StreamTvpMerge() => StreamAsync().Result;
 
       public static long GetObjectCount() => p.GetCount().Result;
 
@@ -27,7 +29,35 @@ namespace Coates.Demos.ProducerConsumer
       public static int? ReadBatchSize = 1;
       public static int? WriteBatchSize = 1;
 
-      private static async Task<long> StreamAsync(Func<IEnumerable<Dto>, Task> writer)
+      private static async Task<long> StreamAsync()
+      {
+         var opts = new BoundedChannelOptions(3000) { SingleReader = true, SingleWriter = true };
+         var channel = Channel.CreateBounded<Dto>(opts);
+         await p.SetCount(TotalCount);
+         await c.ClearAsync();
+         p.BatchSize = ReadBatchSize ?? TotalCount;
+         c.BatchSize = WriteBatchSize ?? TotalCount;
+
+         sw.Restart();
+
+         var t1 = Task.Run
+         (
+            async () =>
+            {
+               await foreach (var item in p.StreamAsync()) await channel.Writer.WriteAsync(item);
+               channel.Writer.Complete();
+            }
+         );
+
+         var t2 = c.WriteStreamAsync(channel.Reader.ReadAllAsync(), c.MergeTvpAsync);
+
+         await Task.WhenAll(t1, t2);
+
+         sw.Stop();
+         return sw.ElapsedMilliseconds;
+      }
+
+      private static async Task<long> PipeAsync(Func<IEnumerable<Dto>, Task> writer)
       {
          var opts = new BoundedChannelOptions(3000) { SingleReader = true, SingleWriter = true };
          var channel = Channel.CreateBounded<Dto>(opts);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace Coates.Demos.ProducerConsumer
 {
@@ -16,6 +17,17 @@ namespace Coates.Demos.ProducerConsumer
       public async Task<IEnumerable<T>> ReadAsync(int skip)
       {
          return await _client.GetFromJsonAsync<IEnumerable<T>>(@$"http://localhost:8080/get/{skip}/{BatchSize}") ?? Enumerable.Empty<T>();
+      }
+
+      public async IAsyncEnumerable<T> StreamAsync()
+      {
+         var request = new HttpRequestMessage(HttpMethod.Get, "http://localhost:8080/get");
+         var response = await _client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+         var stream = await response.Content.ReadAsStreamAsync();
+         await foreach (var item in JsonSerializer.DeserializeAsyncEnumerable<T>(stream, new JsonSerializerOptions { DefaultBufferSize = 4096 }))
+         {
+            yield return item;
+         }
       }
 
       public int BatchSize = 1;
