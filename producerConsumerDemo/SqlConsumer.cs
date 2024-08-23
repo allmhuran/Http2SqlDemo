@@ -54,12 +54,14 @@ namespace Coates.Demos.ProducerConsumer
          }
       }
 
-      public int BatchSize = 1;
+      public int BatchSize
+      {
+         get => _batchSize;
+         set { _batchSize = value; batch = new(value); }
+      }
 
       private async IAsyncEnumerable<T[]> BatchAsync(IAsyncEnumerable<T> data)
       {
-         List<T> batch = new(BatchSize);
-
          await foreach (T item in data)
          {
             batch.Add(item);
@@ -70,6 +72,7 @@ namespace Coates.Demos.ProducerConsumer
             }
          }
          if (batch.Count > 0) yield return batch.ToArray();
+         batch.Clear();
       }
 
       private IEnumerable<SqlDataRecord> map(IEnumerable<T> items)
@@ -114,5 +117,7 @@ namespace Coates.Demos.ProducerConsumer
          new SqlMetaData("s", SqlDbType.VarChar, 32),
          new SqlMetaData("dt", SqlDbType.DateTime)
       );
+      private int _batchSize;
+      private List<T> batch;
    }
 }

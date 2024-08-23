@@ -27,33 +27,31 @@
          Test(Tests.SyncTvp);
          Test(Tests.SyncTvpMerge);
 
-         Next(200_000);
+         Next(100_000);
 
          Test(Tests.SyncBulk);
          Test(Tests.SyncTvp);
          Test(Tests.SyncTvpMerge);
 
-         Next(200_000, 1000, 1000);
+         Next(100_000, 1000, 1000);
 
          Test(Tests.SyncBulk);
          Test(Tests.SyncTvp);
          Test(Tests.SyncTvpMerge);
 
-         Next(200_000, 20000, 20000);
+         Next(100_000, 10000, 10000);
 
          Test(Tests.SyncBulk);
          Test(Tests.SyncTvp);
          Test(Tests.SyncTvpMerge);
 
-         Next(200_000, 1000, 1000);
+         Next(100_000, 1000, 1000);
 
-         Test(Tests.PipeBulk);
          Test(Tests.PipeTvp);
          Test(Tests.PipeTvpMerge);
 
-         Next(200_000, 20000, 20000);
+         Next(100_000, 10000, 10000);
 
-         Test(Tests.PipeBulk);
          Test(Tests.PipeTvp);
          Test(Tests.PipeTvpMerge);
          Test(Tests.StreamTvpMerge);
