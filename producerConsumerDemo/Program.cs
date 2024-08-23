@@ -45,7 +45,7 @@
          Test(Tests.PipeTvp);
          Test(Tests.PipeTvpMerge);
 
-         Next(100_000, 1000, 10000);
+         Next(100_000, 2000, 10000);
 
          Test(Tests.PipeBulk);
          Test(Tests.PipeTvp);
