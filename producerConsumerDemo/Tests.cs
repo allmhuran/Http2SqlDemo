@@ -31,7 +31,7 @@ namespace Coates.Demos.ProducerConsumer
 
       private static async Task<long> StreamAsync()
       {
-         var opts = new BoundedChannelOptions(3000) { SingleReader = true, SingleWriter = true };
+         var opts = new BoundedChannelOptions(4096) { SingleReader = true, SingleWriter = true };
          var channel = Channel.CreateBounded<Dto>(opts);
          await p.SetCount(TotalCount);
          await c.ClearAsync();
@@ -59,7 +59,7 @@ namespace Coates.Demos.ProducerConsumer
 
       private static async Task<long> PipeAsync(Func<IEnumerable<Dto>, Task> writer)
       {
-         var opts = new BoundedChannelOptions(3000) { SingleReader = true, SingleWriter = true };
+         var opts = new BoundedChannelOptions(4096) { SingleReader = true, SingleWriter = true };
          var channel = Channel.CreateBounded<Dto>(opts);
          await p.SetCount(TotalCount);
          await c.ClearAsync();
