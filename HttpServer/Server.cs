@@ -36,7 +36,7 @@ namespace Coates.Demos.ProducerConsumer
                v => new Dto
                {
                   i = v,
-                  s = new string('s', Random.Shared.Next(4, 16)),
+                  s = new string('s', Random.Shared.Next(8, 32)),
                   dt = DateTime.Now.AddDays(v % 100)
                }
             )

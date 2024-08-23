@@ -46,7 +46,31 @@ namespace Coates.Demos.ProducerConsumer
 
       public async Task MergeTvpAsync(IEnumerable<T> items) => await WriteTvpAsync(items, "pcd.MergeData");
 
+      public async Task WriteStreamAsync(IAsyncEnumerable<T> items, Func<IEnumerable<T>, Task> writer)
+      {
+         await foreach (var batch in BatchAsync(items))
+         {
+            await writer(batch);
+         }
+      }
+
       public int BatchSize = 1;
+
+      private async IAsyncEnumerable<T[]> BatchAsync(IAsyncEnumerable<T> data)
+      {
+         List<T> batch = new(BatchSize);
+
+         await foreach (T item in data)
+         {
+            batch.Add(item);
+            if (batch.Count == BatchSize)
+            {
+               yield return batch.ToArray();
+               batch.Clear();
+            }
+         }
+         if (batch.Count > 0) yield return batch.ToArray();
+      }
 
       private IEnumerable<SqlDataRecord> map(IEnumerable<T> items)
       {

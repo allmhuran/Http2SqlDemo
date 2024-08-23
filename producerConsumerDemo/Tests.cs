@@ -15,27 +15,37 @@ namespace Coates.Demos.ProducerConsumer
 
       public static long SyncTvpMerge() => ReadWriteAsync(c.MergeTvpAsync).Result;
 
+      public static long StreamBulk() => StreamAsync(c.WriteBulkAsync).Result;
+
+      public static long StreamTvp() => StreamAsync(c.InsertTvpAsync).Result;
+
+      public static long StreamTvpMerge() => StreamAsync(c.MergeTvpAsync).Result;
+
       public static long GetObjectCount() => p.GetCount().Result;
 
-      public static async Task<long> PipeAsync(Func<IEnumerable<Dto, Task> write)
-      {
-         var opts = new BoundedChannelOptions(2000) { SingleReader = true, SingleWriter = true };
-         var channel = Channel.CreateBounded<Dto>(opts);
+      public static int TotalCount = 1;
+      public static int? ReadBatchSize = 1;
+      public static int? WriteBatchSize = 1;
 
+      private static async Task<long> StreamAsync(Func<IEnumerable<Dto>, Task> writer)
+      {
+         var opts = new BoundedChannelOptions(3000) { SingleReader = true, SingleWriter = true };
+         var channel = Channel.CreateBounded<Dto>(opts);
          await p.SetCount(TotalCount);
          await c.ClearAsync();
          p.BatchSize = ReadBatchSize ?? TotalCount;
          c.BatchSize = WriteBatchSize ?? TotalCount;
-         int skip = 0;
+
          sw.Restart();
 
          var t1 = Task.Run
          (
             async () =>
             {
+               int skip = 0;
                while (true)
                {
-                  var results = (await p.ReadAsync(skip));
+                  var results = await p.ReadAsync(skip);
                   if (!results.Any())
                   {
                      channel.Writer.Complete();
@@ -43,27 +53,22 @@ namespace Coates.Demos.ProducerConsumer
                   }
                   else
                   {
-                     foreach (var item in results) { await channel.Writer.WriteAsync(item); }
-                     skip += p.BatchSize;
+                     foreach (var item in results)
+                     {
+                        await channel.Writer.WriteAsync(item);
+                     }
                   }
+                  skip += p.BatchSize;
                }
             }
          );
 
-         var t2 = Task.Run
-         (
-            async () =>
-            {
-               await foreach (var item in channel.Reader.ReadAllAsync())
-               {
-               }
-            }
-         );
+         var t2 = c.WriteStreamAsync(channel.Reader.ReadAllAsync(), writer);
+
+         await Task.WhenAll(t1, t2);
+         sw.Stop();
+         return sw.ElapsedMilliseconds;
       }
-
-      public static int TotalCount = 1;
-      public static int? ReadBatchSize = 1;
-      public static int? WriteBatchSize = 1;
 
       private static async Task<long> ReadWriteAsync(Func<IEnumerable<Dto>, Task> write)
       {
@@ -75,7 +80,7 @@ namespace Coates.Demos.ProducerConsumer
          sw.Restart();
          while (true)
          {
-            var results = (await p.ReadAsync(skip));
+            var results = await p.ReadAsync(skip);
             if (!results.Any()) break;
             else await write(results);
             skip += p.BatchSize;

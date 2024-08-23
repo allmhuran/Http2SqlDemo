@@ -45,11 +45,23 @@
          Test(Tests.SyncTvp);
          Test(Tests.SyncTvpMerge);
 
-         //Next(1_000_000, 5000);
+         Next(100_000, 1000, 1000);
 
-         //Test(Tests.SyncBulk);
-         //Test(Tests.SyncTvp);
-         //Test(Tests.SyncTvpMerge);
+         Test(Tests.StreamBulk);
+         Test(Tests.StreamTvp);
+         Test(Tests.StreamTvpMerge);
+
+         Next(100_000, 10000, 10000);
+
+         Test(Tests.StreamBulk);
+         Test(Tests.StreamTvp);
+         Test(Tests.StreamTvpMerge);
+
+         Next(1_000_000, 10000, 10000);
+
+         Test(Tests.StreamBulk);
+         Test(Tests.StreamTvp);
+         Test(Tests.StreamTvpMerge);
 
          Console.WriteLine("\nDone");
          Console.ReadKey();
@@ -76,9 +88,9 @@
          GC.Collect();
          var before = GC.GetTotalAllocatedBytes();
          var ms = test();
-         var akb = (GC.GetTotalAllocatedBytes() - before) / 1000f;
          var tkb = GC.GetTotalMemory(false) / 1000f;
-         Console.WriteLine($"{test.Method.Name,-16} {ms / 1000f,9:n1}s at {Tests.TotalCount * 1000f / ms,9:n0}/s (alloc {akb,7:n0}KB total {tkb,7:n0}KB)");
+         var akb = (GC.GetTotalAllocatedBytes() - before) / 1000f;
+         Console.WriteLine($"{test.Method.Name,-14} {Tests.TotalCount * 1000f / ms,8:n0}/s   (alloc {akb,9:n0}KB total {tkb,7:n0}KB)");
       }
    }
 }
