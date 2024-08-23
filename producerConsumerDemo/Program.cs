@@ -10,46 +10,46 @@
 
          Test(Tests.SyncOne);
 
-         //Next(1);
+         Next(1);
 
-         //Test(Tests.SyncOne);
+         Test(Tests.SyncOne);
 
-         //Next(100);
+         Next(100);
 
-         //Test(Tests.SyncOne);
-         //Test(Tests.SyncMany);
+         Test(Tests.SyncOne);
+         Test(Tests.SyncMany);
 
-         //Next(1000);
+         Next(1000);
 
-         //Test(Tests.SyncOne);
-         //Test(Tests.SyncMany);
-         //Test(Tests.SyncBulk);
-         //Test(Tests.SyncTvp);
-         //Test(Tests.SyncTvpMerge);
+         Test(Tests.SyncOne);
+         Test(Tests.SyncMany);
+         Test(Tests.SyncBulk);
+         Test(Tests.SyncTvp);
+         Test(Tests.SyncTvpMerge);
 
-         //Next(100_000);
+         Next(100_000);
 
-         //Test(Tests.SyncBulk);
-         //Test(Tests.SyncTvp);
-         //Test(Tests.SyncTvpMerge);
+         Test(Tests.SyncBulk);
+         Test(Tests.SyncTvp);
+         Test(Tests.SyncTvpMerge);
 
-         //Next(100_000, 1000, 1000);
+         Next(100_000, 1000, 1000);
 
-         //Test(Tests.SyncBulk);
-         //Test(Tests.SyncTvp);
-         //Test(Tests.SyncTvpMerge);
+         Test(Tests.SyncBulk);
+         Test(Tests.SyncTvp);
+         Test(Tests.SyncTvpMerge);
 
-         //Next(100_000, 10000, 10000);
+         Next(100_000, 10000, 10000);
 
-         //Test(Tests.SyncBulk);
-         //Test(Tests.SyncTvp);
-         //Test(Tests.SyncTvpMerge);
+         Test(Tests.SyncBulk);
+         Test(Tests.SyncTvp);
+         Test(Tests.SyncTvpMerge);
 
-         //Next(100_000, 1000, 1000);
+         Next(100_000, 1000, 1000);
 
-         //Test(Tests.PipeBulk);
-         //Test(Tests.PipeTvp);
-         //Test(Tests.PipeTvpMerge);
+         Test(Tests.PipeBulk);
+         Test(Tests.PipeTvp);
+         Test(Tests.PipeTvpMerge);
 
          Next(100_000, 10000, 10000);
 
