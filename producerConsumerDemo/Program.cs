@@ -4,7 +4,7 @@
    {
       static void Main(string[] args)
       {
-         Console.SetWindowSize(90, 35);
+         Console.SetWindowSize(90, 30);
 
          Next(1);
 
