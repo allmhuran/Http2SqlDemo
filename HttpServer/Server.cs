@@ -21,9 +21,8 @@ namespace Coates.Demos.ProducerConsumer
 
       private static string Get(int? skip, int? count)
       {
-         Task.Delay(10).Wait();
+         Task.Delay(20).Wait();
          Console.WriteLine($"get skip = {skip,-7} count = {count,-7}");
-         Task.Delay(10).GetAwaiter().GetResult();
          int rangeSkip = skip ?? 0;
          var rangeCount = Math.Min(count ?? _objectCount, _objectCount - rangeSkip);
 

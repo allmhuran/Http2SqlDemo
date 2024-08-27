@@ -59,8 +59,17 @@ namespace Coates.Demos.ProducerConsumer
 
       private static async Task<long> PipeAsync(Func<IEnumerable<Dto>, Task> writer)
       {
-         var opts = new BoundedChannelOptions(4096) { SingleReader = true, SingleWriter = true };
-         var channel = Channel.CreateBounded<Dto>(opts);
+         //var opts = new BoundedChannelOptions(4096) { SingleReader = true, SingleWriter = true };
+         //var channel = Channel.CreateBounded<Dto>(opts);
+         var channel = Channel.CreateUnbounded<Dto>
+         (
+            new UnboundedChannelOptions
+            {
+               SingleReader = true,
+               SingleWriter = true,
+               AllowSynchronousContinuations = true
+            }
+         );
          await p.SetCount(TotalCount);
          await c.ClearAsync();
          p.BatchSize = ReadBatchSize ?? TotalCount;
