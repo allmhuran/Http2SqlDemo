@@ -73,9 +73,9 @@
          Tests.WriteBatchSize = writeBatchSize;
          Console.WriteLine();
          Console.Write($"Process {count:n0} (read batch: {readBatchSize?.ToString() ?? "none"}, write batch: {writeBatchSize?.ToString() ?? "none"})");
-         var pos = Console.GetCursorPosition();
+         var (Left, Top) = Console.GetCursorPosition();
          Console.ReadKey();
-         Console.SetCursorPosition(pos.Left, pos.Top);
+         Console.SetCursorPosition(Left, Top);
          Console.WriteLine(" >");
          Console.WriteLine();
       }
