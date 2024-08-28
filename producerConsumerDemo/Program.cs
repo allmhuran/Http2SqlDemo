@@ -2,7 +2,7 @@
 {
    internal class Program
    {
-      static void Main(string[] args)
+      private static void Main(string[] args)
       {
          Console.SetWindowSize(90, 30);
 
@@ -33,6 +33,12 @@
          Test(Tests.SyncTvp);
          Test(Tests.SyncTvpMerge);
 
+         Next(400_000);
+
+         Test(Tests.SyncBulk);
+         Test(Tests.SyncTvp);
+         Test(Tests.SyncTvpMerge);
+
          Next(200_000, 1000, 1000);
 
          Test(Tests.SyncBulk);
@@ -52,7 +58,7 @@
          Test(Tests.PipeTvpMerge);
          Test(Tests.StreamTvpMerge);
 
-         Next(500_000, null, 5000);
+         Next(400_000, null, 5000);
 
          Test(Tests.StreamTvpMerge);
 
@@ -60,7 +66,7 @@
          Console.ReadKey();
       }
 
-      static void Next(int? count = null, int? readBatchSize = null, int? writeBatchSize = null)
+      private static void Next(int? count = null, int? readBatchSize = null, int? writeBatchSize = null)
       {
          Tests.TotalCount = count ?? Tests.TotalCount;
          Tests.ReadBatchSize = readBatchSize;
@@ -74,7 +80,7 @@
          Console.WriteLine();
       }
 
-      static void Test(Func<long> test)
+      private static void Test(Func<long> test)
       {
          GC.Collect();
          GC.WaitForPendingFinalizers();
