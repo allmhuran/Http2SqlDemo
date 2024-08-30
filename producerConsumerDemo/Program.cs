@@ -1,10 +1,12 @@
-﻿namespace Coates.Demos.ProducerConsumer
+﻿using System.Diagnostics;
+
+namespace Coates.Demos.ProducerConsumer
 {
    internal class Program
    {
-      private static void Main(string[] args)
+      private static void Main()
       {
-         Console.SetWindowSize(90, 30);
+         Console.SetWindowSize(100, 30);
 
          Next(1);
 
@@ -82,14 +84,12 @@
 
       private static void Test(Func<long> test)
       {
-         GC.Collect();
-         GC.WaitForPendingFinalizers();
-         GC.Collect();
-         var before = GC.GetTotalAllocatedBytes();
+         Task.Delay(4000).Wait();
+         var allocBefore = GC.GetTotalAllocatedBytes();
          var ms = test();
          var tkb = GC.GetTotalMemory(false) / 1000f;
-         var akb = (GC.GetTotalAllocatedBytes() - before) / 1000f;
-         Console.WriteLine($"{test.Method.Name,-14} {Tests.TotalCount * 1000f / ms,8:n0}/s   (alloc {akb,9:n0}KB total {tkb,7:n0}KB)");
+         var akb = (GC.GetTotalAllocatedBytes() - allocBefore) / 1000f;
+         Console.WriteLine($"{test.Method.Name,-14} {Tests.TotalCount * 1000f / ms,8:n0}/s  (alloc {akb,9:n0}KB total {tkb,7:n0}KB)");
       }
    }
 }

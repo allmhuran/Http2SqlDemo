@@ -1,8 +1,7 @@
 {
   "profiles": {
     "producerConsumerDemo": {
-      "commandName": "Project",
-      "commandLineArgs": "-t \"t1,t2\""
+      "commandName": "Project"
     }
   }
 }

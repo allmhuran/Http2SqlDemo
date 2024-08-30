@@ -8,26 +8,21 @@ namespace Coates.Demos.ProducerConsumer
 {
    public class SqlConsumer<T>(string tableName, string connectionSring = @"data source=coa-darc-sql17\dev_integration; initial catalog=scratch; integrated security=SSPI; TrustServerCertificate=true") where T : class
    {
+      public int BatchSize
+      {
+         get => _batchSize;
+         set { _batchSize = value; batch = new(value); }
+      }
+
       public async Task ClearAsync()
       {
          using var con = new SqlConnection(connectionSring);
          await con.DeleteAllAsync<T>();
       }
 
-      public async Task WriteOneAsync(IEnumerable<T> items)
-      {
-         using var con = new SqlConnection(connectionSring);
-         foreach (var batch in items.Chunk(BatchSize))
-         {
-            foreach (var item in batch) await con.InsertAsync(item);
-         }
-      }
+      public async Task InsertTvpAsync(IEnumerable<T> items) => await WriteTvpAsync(items, "pcd.InsertData");
 
-      public async Task WriteManyAsync(IEnumerable<T> items)
-      {
-         using var con = new SqlConnection(connectionSring);
-         foreach (var batch in items.Chunk(BatchSize)) await con.InsertAsync(batch);
-      }
+      public async Task MergeTvpAsync(IEnumerable<T> items) => await WriteTvpAsync(items, "pcd.MergeData");
 
       public async Task WriteBulkAsync(IEnumerable<T> items)
       {
@@ -42,9 +37,20 @@ namespace Coates.Demos.ProducerConsumer
          }
       }
 
-      public async Task InsertTvpAsync(IEnumerable<T> items) => await WriteTvpAsync(items, "pcd.InsertData");
+      public async Task WriteManyAsync(IEnumerable<T> items)
+      {
+         using var con = new SqlConnection(connectionSring);
+         foreach (var batch in items.Chunk(BatchSize)) await con.InsertAsync(batch);
+      }
 
-      public async Task MergeTvpAsync(IEnumerable<T> items) => await WriteTvpAsync(items, "pcd.MergeData");
+      public async Task WriteOneAsync(IEnumerable<T> items)
+      {
+         using var con = new SqlConnection(connectionSring);
+         foreach (var batch in items.Chunk(BatchSize))
+         {
+            foreach (var item in batch) await con.InsertAsync(item);
+         }
+      }
 
       public async Task WriteStreamAsync(IAsyncEnumerable<T> items, Func<IEnumerable<T>, Task> writer)
       {
@@ -54,10 +60,16 @@ namespace Coates.Demos.ProducerConsumer
          }
       }
 
-      public int BatchSize
+      private static IEnumerable<SqlDataRecord> Map(IEnumerable<T> items)
       {
-         get => _batchSize;
-         set { _batchSize = value; batch = new(value); }
+         foreach (var item in items)
+         {
+            var dto = item as Dto;
+            r.SetInt32(0, dto.i);
+            r.SetString(1, dto.s);
+            r.SetDateTime(2, dto.dt);
+            yield return r;
+         }
       }
 
       private async IAsyncEnumerable<T[]> BatchAsync(IAsyncEnumerable<T> data)
@@ -73,18 +85,6 @@ namespace Coates.Demos.ProducerConsumer
          }
          if (batch.Count > 0) yield return batch.ToArray();
          batch.Clear();
-      }
-
-      private IEnumerable<SqlDataRecord> map(IEnumerable<T> items)
-      {
-         foreach (var item in items)
-         {
-            var dto = item as Dto;
-            r.SetInt32(0, dto.i);
-            r.SetString(1, dto.s);
-            r.SetDateTime(2, dto.dt);
-            yield return r;
-         }
       }
 
       private async Task WriteTvpAsync(IEnumerable<T> items, string dbProcName)
@@ -106,12 +106,12 @@ namespace Coates.Demos.ProducerConsumer
 
          foreach (var batch in items.Chunk(BatchSize))
          {
-            tvp.Value = map(batch);
+            tvp.Value = Map(batch);
             await cmd.ExecuteNonQueryAsync();
          }
       }
 
-      private static SqlDataRecord r = new SqlDataRecord
+      private static readonly SqlDataRecord r = new
       (
          new SqlMetaData("i", SqlDbType.Int),
          new SqlMetaData("s", SqlDbType.VarChar, 32),
