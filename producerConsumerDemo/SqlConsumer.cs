@@ -8,11 +8,7 @@ namespace Coates.Demos.ProducerConsumer
 {
    public class SqlConsumer<T>(string tableName, string connectionSring = @"data source=coa-darc-sql17\dev_integration; initial catalog=scratch; integrated security=SSPI; TrustServerCertificate=true") where T : class
    {
-      public int BatchSize
-      {
-         get => _batchSize;
-         set { _batchSize = value; batch = new(value); }
-      }
+      public int BatchSize { get; set; }
 
       public async Task ClearAsync()
       {
@@ -65,26 +61,27 @@ namespace Coates.Demos.ProducerConsumer
          foreach (var item in items)
          {
             var dto = item as Dto;
-            r.SetInt32(0, dto.i);
-            r.SetString(1, dto.s);
-            r.SetDateTime(2, dto.dt);
+            r.SetInt32(0, dto.I);
+            r.SetString(1, dto.S);
+            r.SetDateTime(2, dto.Dt);
             yield return r;
          }
       }
 
       private async IAsyncEnumerable<T[]> BatchAsync(IAsyncEnumerable<T> data)
       {
+         var batch = new T[BatchSize];
+         int i = 0;
          await foreach (T item in data)
          {
-            batch.Add(item);
-            if (batch.Count == BatchSize)
+            batch[i++] = item;
+            if (i == BatchSize)
             {
-               yield return batch.ToArray();
-               batch.Clear();
+               yield return batch;
+               i = 0;
             }
          }
-         if (batch.Count > 0) yield return batch.ToArray();
-         batch.Clear();
+         if (i > 0) yield return batch[..i];
       }
 
       private async Task WriteTvpAsync(IEnumerable<T> items, string dbProcName)
@@ -117,7 +114,5 @@ namespace Coates.Demos.ProducerConsumer
          new SqlMetaData("s", SqlDbType.VarChar, 32),
          new SqlMetaData("dt", SqlDbType.DateTime)
       );
-      private int _batchSize;
-      private List<T> batch;
    }
 }

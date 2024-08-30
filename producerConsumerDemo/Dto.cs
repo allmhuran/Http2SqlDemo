@@ -7,12 +7,12 @@ namespace Coates.Demos.ProducerConsumer
    [Table("PCD.Data")]
    public class Dto
    {
+      [FastMember.Ordinal(3)] public DateTime Dt { get; set; }
+
       [ExplicitKey]
-      [FastMember.Ordinal(1)] public int i { get; set; }
+      [FastMember.Ordinal(1)] public int I { get; set; }
 
-      [FastMember.Ordinal(2)] public string s { get; set; }
-
-      [FastMember.Ordinal(3)] public DateTime dt { get; set; }
+      [FastMember.Ordinal(2)] public string S { get; set; }
    }
 
    [JsonSerializable(typeof(Dto))]

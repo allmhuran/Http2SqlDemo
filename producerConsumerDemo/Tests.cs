@@ -5,16 +5,6 @@ namespace Coates.Demos.ProducerConsumer
 {
    public static class Tests
    {
-      public static long SyncOne() => ReadWriteAsync(c.WriteOneAsync).Result;
-
-      public static long SyncMany() => ReadWriteAsync(c.WriteManyAsync).Result;
-
-      public static long SyncBulk() => ReadWriteAsync(c.WriteBulkAsync).Result;
-
-      public static long SyncTvp() => ReadWriteAsync(c.InsertTvpAsync).Result;
-
-      public static long SyncTvpMerge() => ReadWriteAsync(c.MergeTvpAsync).Result;
-
       public static long PipeBulk() => PipeAsync(c.WriteBulkAsync).Result;
 
       public static long PipeTvp() => PipeAsync(c.InsertTvpAsync).Result;
@@ -23,39 +13,19 @@ namespace Coates.Demos.ProducerConsumer
 
       public static long StreamTvpMerge() => StreamAsync().Result;
 
-      public static long GetObjectCount() => p.GetCount().Result;
+      public static long SyncBulk() => ReadWriteAsync(c.WriteBulkAsync).Result;
 
-      public static int TotalCount = 1;
+      public static long SyncMany() => ReadWriteAsync(c.WriteManyAsync).Result;
+
+      public static long SyncOne() => ReadWriteAsync(c.WriteOneAsync).Result;
+
+      public static long SyncTvp() => ReadWriteAsync(c.InsertTvpAsync).Result;
+
+      public static long SyncTvpMerge() => ReadWriteAsync(c.MergeTvpAsync).Result;
+
       public static int? ReadBatchSize = 1;
+      public static int TotalCount = 1;
       public static int? WriteBatchSize = 1;
-
-      private static async Task<long> StreamAsync()
-      {
-         var opts = new BoundedChannelOptions(4096) { SingleReader = true, SingleWriter = true };
-         var channel = Channel.CreateBounded<Dto>(opts);
-         await p.SetCount(TotalCount);
-         await c.ClearAsync();
-         p.BatchSize = ReadBatchSize ?? TotalCount;
-         c.BatchSize = WriteBatchSize ?? TotalCount;
-
-         sw.Restart();
-
-         var t1 = Task.Run
-         (
-            async () =>
-            {
-               await foreach (var item in p.StreamAsync()) await channel.Writer.WriteAsync(item);
-               channel.Writer.Complete();
-            }
-         );
-
-         var t2 = c.WriteStreamAsync(channel.Reader.ReadAllAsync(), c.MergeTvpAsync);
-
-         await Task.WhenAll(t1, t2);
-
-         sw.Stop();
-         return sw.ElapsedMilliseconds;
-      }
 
       private static async Task<long> PipeAsync(Func<IEnumerable<Dto>, Task> writer)
       {
@@ -128,8 +98,36 @@ namespace Coates.Demos.ProducerConsumer
          return sw.ElapsedMilliseconds;
       }
 
-      private static SqlConsumer<Dto> c = new SqlConsumer<Dto>("PCD.Data");
-      private static HttpProducer<Dto> p = new HttpProducer<Dto>();
-      private static Stopwatch sw = new Stopwatch();
+      private static async Task<long> StreamAsync()
+      {
+         var opts = new BoundedChannelOptions(4096) { SingleReader = true, SingleWriter = true };
+         var channel = Channel.CreateBounded<Dto>(opts);
+         await p.SetCount(TotalCount);
+         await c.ClearAsync();
+         p.BatchSize = ReadBatchSize ?? TotalCount;
+         c.BatchSize = WriteBatchSize ?? TotalCount;
+
+         sw.Restart();
+
+         var t1 = Task.Run
+         (
+            async () =>
+            {
+               await foreach (var item in p.StreamAsync()) await channel.Writer.WriteAsync(item);
+               channel.Writer.Complete();
+            }
+         );
+
+         var t2 = c.WriteStreamAsync(channel.Reader.ReadAllAsync(), c.MergeTvpAsync);
+
+         await Task.WhenAll(t1, t2);
+
+         sw.Stop();
+         return sw.ElapsedMilliseconds;
+      }
+
+      private static readonly SqlConsumer<Dto> c = new("PCD.Data");
+      private static readonly HttpProducer<Dto> p = new();
+      private static readonly Stopwatch sw = new();
    }
 }
