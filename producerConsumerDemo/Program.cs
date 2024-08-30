@@ -84,6 +84,9 @@ namespace Coates.Demos.ProducerConsumer
 
       private static void Test(Func<long> test)
       {
+         GC.Collect();
+         GC.WaitForPendingFinalizers();
+         GC.Collect();
          Task.Delay(4000).Wait();
          var allocBefore = GC.GetTotalAllocatedBytes();
          var ms = test();

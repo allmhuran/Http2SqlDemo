@@ -46,6 +46,7 @@ namespace Coates.Demos.ProducerConsumer
          c.BatchSize = WriteBatchSize ?? TotalCount;
 
          sw.Restart();
+         painW
 
          var t1 = Task.Run
          (
