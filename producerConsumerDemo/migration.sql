@@ -22,7 +22,14 @@ go
 set noexec off;
 go
 
-create or alter procedure pcd.LoadData(@data pcd.data readonly) as 
+create or alter procedure [PCD].[InsertData](@data pcd.data readonly) as
+begin
+   set nocount on;
+   insert pcd.data select * from @data;
+end
+go
+
+create or alter procedure [PCD].[MergeData](@data pcd.data readonly) as 
 begin
    set nocount on;
    
@@ -39,7 +46,6 @@ begin
          t.dt = s.dt;
 end;
 go
-
 
 commit;
 
