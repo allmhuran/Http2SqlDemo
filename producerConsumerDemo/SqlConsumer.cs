@@ -6,7 +6,7 @@ using System.Data;
 
 namespace Coates.Demos.ProducerConsumer
 {
-   public class SqlConsumer<T>(string tableName, string connectionSring = @"data source=coa-darc-sql17\dev_integration; initial catalog=scratch; integrated security=SSPI; TrustServerCertificate=true") where T : class
+   public class SqlConsumer<T>(string tableName, string connectionSring = @"data source=server; initial catalog=scratch; integrated security=SSPI; TrustServerCertificate=true") where T : class
    {
       public int BatchSize { get; set; }
 
